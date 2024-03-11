@@ -105,12 +105,12 @@ class Simulator1DIMPLICIT:
         # ------
         # --- Build vectorE:
         vectorE = np.zeros(2*self.Ncells)
-        vectorE[0] = P1
-        vectorE[1] = Sw1
-        vectorE[2] = P2
-        vectorE[3] = Sw2
-        vectorE[-2] = Pn
-        vectorE[-1] = Swn
+        vectorE[0] = 20.68
+        vectorE[1] = 0.2
+        vectorE[2] = 55.16
+        vectorE[3] = 0.23158
+        vectorE[-2] = 551.58
+        vectorE[-1] = 0.8
         # ------
         # --- Solve linear system:
         matrixJInv = np.linalg.inv(matrixJ)
