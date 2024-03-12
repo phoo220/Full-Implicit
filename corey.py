@@ -22,7 +22,7 @@ class coreyWater:
         return self.Krwo*nSw**self.Nw
     def derivative(self,Sw):
         nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return self.Krwo*self.Nw*nSw**(self.Nw-1)
+        return self.Krwo*self.Nw*nSw**(self.Nw-1.0)
     
 
 class coreyOil:
@@ -41,6 +41,6 @@ class coreyOil:
         return (1.0-nSw)**self.No
     def derivative(self,Sw):
         nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return -self.No*(1.0-nSw)**(self.No-1)
+        return -self.No*(1.0-nSw)**(self.No-1.0)
     
 
