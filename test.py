@@ -40,13 +40,12 @@ matrixJ[-2,-1] = Ncells
 matrixJ[-1,-2] = Ncells
 matrixJ[-1,-1] = Ncells
 print(matrixJ)
-vectorE = np.zeros(2*Ncells)
-vectorE[0] = 20.68
-vectorE[1] = 0.2
-vectorE[2] = 55.16
-vectorE[3] = 0.23158
-vectorE[-2] = 551.58
-vectorE[-1] = 0.8
-print(vectorE)
-Residual = np.dot(matrixJ,vectorE)
-print(Residual)
+pressure = 1.0E7*np.ones(Ncells)
+saturation = 0.2*np.ones(Ncells)
+vectorX =  np.zeros(2*Ncells)
+vectorX[::2] =pressure
+vectorX[1::2] = saturation
+print('vectorX -', vectorX)
+
+Residual = np.dot(matrixJ,vectorX)
+print('Residual - ', Residual)
