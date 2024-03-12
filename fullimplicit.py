@@ -55,68 +55,60 @@ class Simulator1DIMPLICIT:
         totalTrans = oilTrans + waterTrans
         totalTransRight = oilTransRight + waterTransRight
 
-        # ----------------------------
-        # Solve implicit for pressure:
-        #
-        # We solve a linear system matrixA pressure = vectorE
-        #
-        # Since the system is small and 1D we can buid a
-        # dense matrix and use explicit inversion
 
-        # --- Build matrixA:
+        # --- Build matrixJ:
         Porooverdt = self.poro/self.deltat
         matrixJ = np.zeros((2*self.Ncells,2*self.Ncells))
         # First row
         matrixJ[0,0] = -totalTrans[0]
-        matrixJ[0,1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(pressure[1]-pressure[0])+Porooverdt
+        matrixJ[0,1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil(self.saturation[0])*(self.pressure[1]-self.pressure[0])+Porooverdt
         matrixJ[1,0] = -totalTrans[1]
-        matrixJ[1,1] = (totalTrans[1]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(pressure[1]-pressure[0])-Porooverdt
+        matrixJ[1,1] = (totalTrans[1]/self.waterViscosity)*self.relpermWater(self.saturation[0])*(self.pressure[1]-self.pressure[0])-Porooverdt
         matrixJ[0,2] = totalTrans[0]
         matrixJ[0,3] = 0
         matrixJ[1,2] = totalTrans[1]
         matrixJ[1,3] = 0
+
         # Middle rows
         for ii in np.arange(2, 2*self.Ncells-2,2):
             matrixJ[ii,ii-2] = totalTrans[ii-1]
-            matrixJ[ii,ii-1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(pressure[1]-pressure[0])
+            matrixJ[ii,ii-1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(self.pressure[1]-self.pressure[0])
             matrixJ[ii+1,ii-2] = totalTrans[ii-1]
-            matrixJ[ii+1,ii-1] = (totalTrans[0]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(pressure[1]-pressure[0])
+            matrixJ[ii+1,ii-1] = (totalTrans[0]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(self.pressure[1]-self.pressure[0])
 
             matrixJ[ii,ii] = -totalTrans[ii-1]-totalTrans[ii-1]
-            matrixJ[ii,ii+1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(pressure[1]-pressure[0])+Porooverdt
+            matrixJ[ii,ii+1] = (totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(self.pressure[1]-self.pressure[0])+Porooverdt
             matrixJ[ii+1,ii] =-totalTrans[ii-1]-totalTrans[ii-1]
-            matrixJ[ii+1,ii+1] =(totalTrans[1]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(pressure[1]-pressure[0])-Porooverdt
+            matrixJ[ii+1,ii+1] =(totalTrans[1]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(self.pressure[1]-self.pressure[0])-Porooverdt
 
             matrixJ[ii,ii+2] = totalTrans[ii+1]
             matrixJ[ii,ii+3] = 0
             matrixJ[ii+1,ii+2] =totalTrans[ii+1]
             matrixJ[ii+1,ii+3] = 0
+
         # Last row
         matrixJ[-2,-4] = -totalTrans[-2]
-        matrixJ[-2,-3] = (totalTrans[-2]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(pressure[1]-pressure[0])
+        matrixJ[-2,-3] = (totalTrans[-2]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(self.pressure[1]-self.pressure[0])
         matrixJ[-1,-4] = -totalTrans[-2]
-        matrixJ[-1,-3] = (totalTrans[-2]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(pressure[1]-pressure[0])
+        matrixJ[-1,-3] = (totalTrans[-2]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(self.pressure[1]-self.pressure[0])
 
         matrixJ[-2,-2] = -2*totalTransRight-totalTrans[-1]
-        matrixJ[-2,-1] = (2*totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(pressure[1]-pressure[0])+Porooverdt
+        matrixJ[-2,-1] = (2*totalTrans[0]/self.oilViscosity)*self.relpermOil*self.saturation[0]*(self.pressure[1]-self.pressure[0])+Porooverdt[0]
         matrixJ[-1,-2] = -2*totalTransRight-totalTrans[-1]
-        matrixJ[-1,-1] = (2*totalTrans[1]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(pressure[1]-pressure[0])-Porooverdt
+        matrixJ[-1,-1] = (2*totalTrans[1]/self.waterViscosity)*self.relpermWater*self.saturation[0]*(self.pressure[1]-self.pressure[0])-Porooverdt
         
         # ------
-        # --- Build vectorE:
-        vectorE = np.zeros(2*self.Ncells)
-        vectorE[0] = 20.68
-        vectorE[1] = 0.2
-        vectorE[2] = 55.16
-        vectorE[3] = 0.23158
-        vectorE[-2] = 551.58
-        vectorE[-1] = 0.8
+        # --- Build vectorX:
+        vectorX =  np.zeros(2*self.Ncells)
+        vectorX[::2] =self.pressure
+        vectorX[1::2] = self.saturation
         # ------
         # --- Solve linear system:
-        matrixJInv = np.linalg.inv(matrixJ)
-        Residual = np.dot(matrixJInv,vectorE)
+        #matrixJInv = np.linalg.inv(matrixJ)
+        Residual = np.dot(matrixJ,vectorX)
         self.residual = Residual
         self.time = self.time + self.deltat
+        
     
     def simulateTo(self,time):
         '''
