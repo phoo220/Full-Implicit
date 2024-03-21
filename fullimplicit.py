@@ -12,11 +12,11 @@ class Simulator1DIMPLICIT:
         self.Ncells = Ncells
         self.length = length
         self.deltaX = length/Ncells
-        self.poro = 0.2*np.ones(Ncells)
+        self.poro = 0.2*np.ones(2*Ncells)
         #This next line will also define the transmissibilities
-        self._perm = self.setPermeabilities(1.0E-13*np.ones(Ncells))
-        self.pressure = 1.0E7*np.ones(Ncells)
-        self.saturation = 0.2*np.ones(Ncells)
+        self._perm = self.setPermeabilities(1.0E-13*np.ones(2*Ncells))
+        self.pressure = 1.0E7*np.ones(2*Ncells)
+        self.saturation = 0.2*np.ones(2*Ncells)
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
@@ -28,12 +28,6 @@ class Simulator1DIMPLICIT:
         self.relpermOil = coreyOil(2.0,0.2,0.2)
     
     def setPermeabilities(self,permVector):
-        '''
-        Set permeabilities
-        Args:
-        permVector: A numpy array of length
-        self.Ncells with perm values
-        '''
         self._perm = permVector
         self._Tran = (2.0/(1.0/self._perm[:-1]+1.0/self._perm[1:]))/self.deltaX**2
         self._TranRight = self._perm[-1]/self.deltaX**2
@@ -100,8 +94,8 @@ class Simulator1DIMPLICIT:
         # ------
         # --- Build vectorX:
         vectorX =  np.zeros(2*self.Ncells)
-        vectorX[::2] =self.pressure
-        vectorX[1::2] = self.saturation
+        vectorX[::2] =self.pressure[::2]
+        vectorX[1::2] = self.saturation[1::2]
         vectorX[-2] = self.rightPressure
 
         # ------
