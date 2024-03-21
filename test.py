@@ -1,8 +1,12 @@
 import numpy as np
 from corey import coreyWater, coreyOil
 import matplotlib.pyplot as plt
+
+relpermWater = coreyWater(2.0,0.4,0.2,0.2)
+print(relpermWater)
 Ncells = 8
 matrixJ = np.zeros((2*Ncells,2*Ncells))
+
 
 matrixJ[0,0] = 1
 matrixJ[0,1] = 1
@@ -40,11 +44,15 @@ matrixJ[-2,-1] = Ncells
 matrixJ[-1,-2] = Ncells
 matrixJ[-1,-1] = Ncells
 print(matrixJ)
+print(np.linalg.det(matrixJ))
+
 pressure = 1.0E7*np.ones(Ncells)
 saturation = 0.2*np.ones(Ncells)
+rightpressure = 2000
 vectorX =  np.zeros(2*Ncells)
 vectorX[::2] =pressure
 vectorX[1::2] = saturation
+vectorX[-2] = rightpressure
 print('vectorX -', vectorX)
 
 Residual = np.dot(matrixJ,vectorX)
