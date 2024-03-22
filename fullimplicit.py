@@ -63,21 +63,21 @@ class Simulator1DIMPLICIT:
 
         # Middle rows
         for ii in np.arange(2, (2*self.Ncells)-2,2):
-            if ii+2 < len(oilTrans) and ii-4 >=0:
-                matrixJ[ii,ii-2] = oilTrans[ii-2]
-                matrixJ[ii,ii-1] = (oilTrans[ii-2]/self.oilViscosity)*self.relpermOil(self.saturation[ii-2])*(self.pressure[ii-1]-self.pressure[ii-2])
-                matrixJ[ii+1,ii-2] = waterTrans[ii-2]
-                matrixJ[ii+1,ii-1] = (waterTrans[ii-2]/self.waterViscosity)*self.relpermWater(self.saturation[ii-2])*(self.pressure[ii-1]-self.pressure[ii-2])
+            #if ii+2 < len(oilTrans) and ii-4 >=0:
+            matrixJ[ii,ii-2] = oilTrans[ii-2]
+            matrixJ[ii,ii-1] = (oilTrans[ii-2]/self.oilViscosity)*self.relpermOil(self.saturation[ii-2])*(self.pressure[ii-1]-self.pressure[ii-2])
+            matrixJ[ii+1,ii-2] = waterTrans[ii-2]
+            matrixJ[ii+1,ii-1] = (waterTrans[ii-2]/self.waterViscosity)*self.relpermWater(self.saturation[ii-2])*(self.pressure[ii-1]-self.pressure[ii-2])
+            
+            matrixJ[ii,ii] = -oilTrans[ii]-oilTrans[ii-1]
+            matrixJ[ii,ii+1] = (oilTrans[ii]/self.oilViscosity)*self.relpermOil(self.saturation[ii])*(self.pressure[ii+1]-self.pressure[ii])+Porooverdt[ii]
+            matrixJ[ii+1,ii] =-waterTrans[ii]-waterTrans[ii-1]
+            matrixJ[ii+1,ii+1] =(waterTrans[ii]/self.waterViscosity)*self.relpermWater(self.saturation[ii])*(self.pressure[ii+1]-self.pressure[ii])-Porooverdt[ii]
 
-                matrixJ[ii,ii] = -oilTrans[ii]-oilTrans[ii-1]
-                matrixJ[ii,ii+1] = (oilTrans[ii]/self.oilViscosity)*self.relpermOil(self.saturation[ii])*(self.pressure[ii+1]-self.pressure[ii])+Porooverdt[ii]
-                matrixJ[ii+1,ii] =-waterTrans[ii]-waterTrans[ii-1]
-                matrixJ[ii+1,ii+1] =(waterTrans[ii]/self.waterViscosity)*self.relpermWater(self.saturation[ii])*(self.pressure[ii+1]-self.pressure[ii])-Porooverdt[ii]
-   
-                matrixJ[ii,ii+2] = oilTrans[ii+2]
-                matrixJ[ii,ii+3] = 0
-                matrixJ[ii+1,ii+2] =waterTrans[ii+2]
-                matrixJ[ii+1,ii+3] = 0
+            matrixJ[ii,ii+2] = oilTrans[ii+2]
+            matrixJ[ii,ii+3] = 0
+            matrixJ[ii+1,ii+2] =waterTrans[ii+2]
+            matrixJ[ii+1,ii+3] = 0
 
         # Last row
         matrixJ[-2,-4] = -oilTrans[-1]
@@ -108,8 +108,8 @@ class Simulator1DIMPLICIT:
 
         # ------
         # --- Solve linear system:
-        #matrixJInv = np.linalg.inv(matrixJ)
-        distance = vectorX-np.dot(matrixJ,vectorR)
+        matrixJInv = np.linalg.inv(matrixJ)
+        distance = vectorX-np.dot(matrixJInv,vectorR)
         self.matrixJ = matrixJ
         self.distance = distance
         self.time = self.time + self.deltat
