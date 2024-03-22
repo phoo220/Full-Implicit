@@ -109,10 +109,15 @@ class Simulator1DIMPLICIT:
         # ------
         # --- Solve linear system:
         matrixJInv = np.linalg.inv(matrixJ)
-        distance = vectorX-np.dot(matrixJInv,vectorR)
+        Xm = vectorX-np.dot(matrixJInv,vectorR)
         self.matrixJ = matrixJ
-        self.distance = distance
+        self.pressure[::2] = Xm[::2]
+        self.saturation[1::2] = Xm[1::2]
         self.time = self.time + self.deltat
+        maxsat = 1.0-self.relpermOil.Sorw
+        minsat = self.relpermOil.Swirr
+        self.saturation[ self.saturation>maxsat ] = maxsat
+        self.saturation[ self.saturation<minsat ] = minsat
         
     
     def simulateTo(self,time):
