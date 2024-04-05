@@ -19,11 +19,10 @@ class coreyWater:
         self.Sorw = Sorw
     def __call__(self,Sw):
         nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return self.Krwo*nSw**self.Nw
-    def derivative(self,Sw):
-        nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return self.Krwo*self.Nw*nSw**(self.Nw-1.0)
-    
+        dkrWater_value = self.Krwo*self.Nw*nSw**(self.Nw-1.0)
+        dkrWater = dkrWater_value
+        dkrWater = np.maximum(1E-8,dkrWater)
+        return dkrWater
 
 class coreyOil:
     def __init__(self,No,Swirr,Sorw):
@@ -38,9 +37,10 @@ class coreyOil:
         self.Sorw = Sorw
     def __call__(self,Sw):
         nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return (1.0-nSw)**self.No
-    def derivative(self,Sw):
-        nSw = normSw(Sw,self.Swirr,self.Sorw)
-        return -self.No*(1.0-nSw)**(self.No-1.0)
+        dkrOil_value = -self.No*(1.0-nSw)**(self.No-1.0)
+        dkrOil = dkrOil_value
+        dkrOil = np.maximum(1E-8,dkrOil)
+        return dkrOil
+
     
 
