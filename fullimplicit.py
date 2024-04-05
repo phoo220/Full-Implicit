@@ -12,11 +12,11 @@ class Simulator1DIMPLICIT:
         self.Ncells = Ncells
         self.length = length
         self.deltaX = length/Ncells
-        self.poro = 0.2*np.ones(2*Ncells)
+        self.poro = 0.2*np.ones(2*Ncells,dtype=float)
         #This next line will also define the transmissibilities
         self._perm = self.setPermeabilities(1.0E-13*np.ones(2*Ncells))
-        self.pressure = 1.0E7*np.ones(2*Ncells)
-        self.saturation = 0.2*np.ones(2*Ncells)
+        self.pressure = 1.0E7*np.ones(2*Ncells,dtype=float)
+        self.saturation = 0.2*np.ones(2*Ncells,dtype=float)
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
@@ -52,7 +52,7 @@ class Simulator1DIMPLICIT:
             Porooverdt = self.poro/self.deltat
 
             # --- Build matrixJ
-            matrixJ = np.zeros((2*self.Ncells,2*self.Ncells))
+            matrixJ = np.zeros((2*self.Ncells,2*self.Ncells),dtype=float)
 
             # First row
             matrixJ[0,0] = -oilTrans[0]
@@ -60,9 +60,9 @@ class Simulator1DIMPLICIT:
             matrixJ[1,0] = -waterTrans[0]
             matrixJ[1,1] = (waterTrans[0]/self.waterViscosity)*self.relpermWater(self.saturation[0])*(self.pressure[1]-self.pressure[0])-Porooverdt[0]
 
-            matrixJ[0,2] = oilTrans[0]
+            matrixJ[0,2] = oilTrans[1]
             matrixJ[0,3] = 0
-            matrixJ[1,2] = waterTrans[0]
+            matrixJ[1,2] = waterTrans[1]
             matrixJ[1,3] = 0
 
             # Middle rows
@@ -95,7 +95,7 @@ class Simulator1DIMPLICIT:
             matrixJ[-1,-1] = (2*waterTransRight/self.waterViscosity)*self.relpermWater(self.saturation[-1])*(self.rightPressure-self.pressure[-1])-Porooverdt[-1]
 
             # --- Build vectorR:
-            vectorR =  np.zeros(2*self.Ncells)
+            vectorR =  np.zeros(2*self.Ncells, dtype=float)
             for i in range(2,2*self.Ncells-2):
                 if i % 2 == 0:
                     vectorR[i] = oilTrans[i+1]*(self.pressure[i+1]-self.pressure[i])-oilTrans[i]*(self.pressure[i]-self.pressure[i-1])+Porooverdt[i]*(self.saturation[i]-self.saturation[i-1])
@@ -107,7 +107,7 @@ class Simulator1DIMPLICIT:
             vectorR[-1] = 2*waterTransRight*(self.rightPressure-self.pressure[-1])-waterTrans[-1]*(self.pressure[-1]-self.pressure[-2])-Porooverdt[-1]*(self.saturation[-1]-self.saturation[-2])
 
             # --- Build vectorX:
-            vectorX =  np.zeros(2*self.Ncells)
+            vectorX =  np.zeros(2*self.Ncells,dtype=float)
             vectorX[::2] = self.pressure[::2]
             vectorX[1::2] = self.saturation[1::2]
             vectorX[-2] = self.rightPressure
@@ -153,4 +153,3 @@ class Simulator1DIMPLICIT:
                 self.time = time
             else:
                 self.doTimestep()
-
