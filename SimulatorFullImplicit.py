@@ -22,12 +22,12 @@ pressures = []
 saturation = []
 for time in times:
     simulator.simulateTo(time)
-    pressures.append(simulator.pressure[::2])  # Make a copy to avoid modifying original pressure array
-    saturation.append(simulator.saturation[1::2])  # Make a copy to avoid modifying original saturation array
+    pressures.append(simulator.pressure)  # Make a copy to avoid modifying original pressure array
+    saturation.append(simulator.saturation)  # Make a copy to avoid modifying original saturation array
 cell_lengths = np.linspace(0, simulator.length, simulator.Ncells)
 
 cmap = plt.get_cmap('plasma')
-for i, (time, sat) in enumerate(zip(times, saturation[::2])):
+for i, (time, sat) in enumerate(zip(times, saturation)):
     plt.plot(cell_lengths,sat, color= cmap(1-i/len(times)))
 plt.title('Saturation Profiles at Different Times')
 plt.xlabel('Distance [m]')
