@@ -20,7 +20,7 @@ class Simulator1DIMPLICIT:
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
-        self.deltat = daysToSeconds(1)
+        self.deltat = daysToSeconds(0.1)
         self.time = 0.0
         self.oilViscosity = 2.0E-3
         self.waterViscosity = 1.0E-3
@@ -39,7 +39,7 @@ class Simulator1DIMPLICIT:
         iteration = 0
         self.prevSat=np.copy(self.saturation)
         while True:
-            print('Iteration',iteration)
+            print('Iteration-',iteration)
             # Calculate mobility for oil and water phases based on current saturation
             mobOil = self.relpermOil(self.saturation)/self.oilViscosity
             mobWater = self.relpermWater(self.saturation)/self.waterViscosity
@@ -52,6 +52,24 @@ class Simulator1DIMPLICIT:
             oilTransRight = self._TranRight*mobOil[-1]
             waterTransRight = self._TranRight*mobWater[-1]
             Porooverdt = self.poro/self.deltat
+            
+            # --- Build vectorR:
+            vectorR =  np.zeros(2*self.Ncells, dtype=np.float64)
+            for i in range(2,2*self.Ncells-2):
+                if i % 2 == 0:
+                    vectorR[i] = oilTrans[i]*(self.pressure[i+1]-self.pressure[i])-oilTrans[i-1]*(self.pressure[i]-self.pressure[i-1])+Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
+                else:
+                    vectorR[i] = waterTrans[i]*(self.pressure[i+1]-self.pressure[i])-waterTrans[i-1]*(self.pressure[i]-self.pressure[i-1])-Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
+            vectorR[0] = oilTrans[0]*(self.pressure[1]-self.pressure[0])+Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
+            vectorR[1] = waterTrans[0]*(self.pressure[1]-self.pressure[0])+self.leftDarcyVelocity-Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
+            vectorR[-2] = 2*oilTransRight*(self.rightPressure-self.pressure[-1])-oilTrans[-2]*(self.pressure[-1]-self.pressure[-2])+Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
+            vectorR[-1] = 2*waterTransRight*(self.rightPressure-self.pressure[-1])-waterTrans[-2]*(self.pressure[-1]-self.pressure[-2])-Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
+
+            # --- Build vectorX:
+            vectorX =  np.zeros(2*self.Ncells,dtype=np.float64)
+            vectorX[::2] = self.pressure[::2]
+            vectorX[1::2] = self.saturation[1::2]
+            vectorX[-2] = self.rightPressure
 
             # --- Build matrixJ
             matrixJ = np.zeros((2*self.Ncells,2*self.Ncells),dtype=np.float64)
@@ -96,27 +114,11 @@ class Simulator1DIMPLICIT:
             matrixJ[-1,-2] = -2*waterTransRight-waterTrans[-2]
             matrixJ[-1,-1] = (2*self._TranRight/self.waterViscosity)*self.relpermWater(self.saturation[-1])*(self.rightPressure-self.pressure[-1])-Porooverdt[-1]
 
-            # --- Build vectorR:
-            vectorR =  np.zeros(2*self.Ncells, dtype=np.float64)
-            for i in range(2,2*self.Ncells-2):
-                if i % 2 == 0:
-                    vectorR[i] = oilTrans[i+1]*(self.pressure[i+1]-self.pressure[i])-oilTrans[i]*(self.pressure[i]-self.pressure[i-1])+Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
-                else:
-                    vectorR[i] = waterTrans[i+1]*(self.pressure[i+1]-self.pressure[i])-waterTrans[i]*(self.pressure[i]-self.pressure[i-1])-Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
-            vectorR[0] = oilTrans[0]*(self.pressure[1]-self.pressure[0])+Porooverdt[0]*(self.saturation[1]-self.prevSat[1])
-            vectorR[1] = waterTrans[0]*(self.pressure[1]-self.pressure[0])+self.leftDarcyVelocity-Porooverdt[1]*(self.saturation[1]-self.prevSat[1])
-            vectorR[-2] = 2*oilTransRight*(self.rightPressure-self.pressure[-1])-oilTrans[-1]*(self.pressure[-1]-self.pressure[-2])+Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
-            vectorR[-1] = 2*waterTransRight*(self.rightPressure-self.pressure[-1])-waterTrans[-1]*(self.pressure[-1]-self.pressure[-2])-Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
-
-            # --- Build vectorX:
-            vectorX =  np.zeros(2*self.Ncells,dtype=np.float64)
-            vectorX[::2] = self.pressure[::2]
-            vectorX[1::2] = self.saturation[1::2]
-            vectorX[-2] = self.rightPressure
 
             # --- Solve linear system:
             matrixJInv = np.linalg.inv(matrixJ)
-            Xm = vectorX-np.dot(matrixJInv,vectorR)
+            deltaX = -np.dot(matrixJInv,vectorR)
+            Xm = vectorX + deltaX
 
             # Update vectorX and saturation
             self.vectorX = Xm
@@ -128,15 +130,17 @@ class Simulator1DIMPLICIT:
             self.saturation[ self.saturation<minsat ] = minsat
             self.time = self.time + self.deltat
             self.residual = vectorR
+            self.prevSat=np.copy(self.saturation)
 
             # Check convergence
             residual_norm = np.linalg.norm(vectorR)
-            print('residual_norm-',residual_norm)
             if residual_norm < tolerance or iteration >= max_iterations:
                 break
             iteration += 1
+            print('residual_norm-',residual_norm)
             print('pressure - ',self.pressure)
             print('saturation -',self.saturation)
+            #print('residual -', self.residual)
         #self.residual = vectorR
         #self.pressure[::2] = Xm[::2]
         #self.saturation[1::2] = Xm[1::2]
@@ -158,3 +162,4 @@ class Simulator1DIMPLICIT:
                 self.time = time
             else:
                 self.doTimestep()
+                
