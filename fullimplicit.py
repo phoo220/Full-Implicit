@@ -61,7 +61,7 @@ class Simulator1DIMPLICIT:
                 else:
                     vectorR[i] = waterTrans[i]*(self.pressure[i+1]-self.pressure[i])-waterTrans[i-1]*(self.pressure[i]-self.pressure[i-1])-Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
             vectorR[0] = oilTrans[0]*(self.pressure[1]-self.pressure[0])+Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
-            vectorR[1] = waterTrans[0]*(self.pressure[1]-self.pressure[0])+self.leftDarcyVelocity-Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
+            vectorR[1] = waterTrans[0]*(self.pressure[1]-self.pressure[0])+self.leftDarcyVelocity/self.deltaX-Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
             vectorR[-2] = 2*oilTransRight*(self.rightPressure-self.pressure[-1])-oilTrans[-2]*(self.pressure[-1]-self.pressure[-2])+Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
             vectorR[-1] = 2*waterTransRight*(self.rightPressure-self.pressure[-1])-waterTrans[-2]*(self.pressure[-1]-self.pressure[-2])-Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
 
@@ -89,9 +89,9 @@ class Simulator1DIMPLICIT:
             for ii in np.arange(2,(2*self.Ncells)-2,2):
                 #if ii+2 < len(oilTrans) and ii-4 >=0:
                 matrixJ[ii,ii-2] = oilTrans[ii-1]
-                matrixJ[ii,ii-1] = (self._Tran[ii-1]/self.oilViscosity)*self.relpermOil(self.saturation[ii-1])*(self.pressure[ii]-self.pressure[ii-1])
+                matrixJ[ii,ii-1] = -(self._Tran[ii-1]/self.oilViscosity)*self.relpermOil(self.saturation[ii-1])*(self.pressure[ii]-self.pressure[ii-1])
                 matrixJ[ii+1,ii-2] = waterTrans[ii-1]
-                matrixJ[ii+1,ii-1] = (self._Tran[ii-1]/self.waterViscosity)*self.relpermWater(self.saturation[ii-1])*(self.pressure[ii]-self.pressure[ii-1])
+                matrixJ[ii+1,ii-1] = -(self._Tran[ii-1]/self.waterViscosity)*self.relpermWater(self.saturation[ii-1])*(self.pressure[ii]-self.pressure[ii-1])
 
                 matrixJ[ii,ii] = -oilTrans[ii]-oilTrans[ii-1]
                 matrixJ[ii,ii+1] = (self._Tran[ii]/self.oilViscosity)*self.relpermOil(self.saturation[ii])*(self.pressure[ii+1]-self.pressure[ii])+Porooverdt[ii]
