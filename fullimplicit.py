@@ -14,9 +14,9 @@ class Simulator1DIMPLICIT:
         self.deltaX = length/Ncells
         self.poro = 0.25*np.ones(2*Ncells,dtype=np.float64)
         #This next line will also define the transmissibilities
-        self._perm = self.setPermeabilities(1.0E-13*np.ones(2*Ncells))
-        self.pressure = 1.0E7*np.ones(2*Ncells,dtype=np.float64)
-        self.saturation = 0.2*np.ones(2*Ncells,dtype=np.float64)
+        self._perm = self.setPermeabilities(1.0E-13*np.ones(Ncells))
+        self.pressure = 1.0E7*np.ones(Ncells,dtype=np.float64)
+        self.saturation = 0.2*np.ones(Ncells,dtype=np.float64)
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
@@ -55,11 +55,9 @@ class Simulator1DIMPLICIT:
             
             # --- Build vectorR:
             vectorR =  np.zeros(2*self.Ncells, dtype=np.float64)
-            for i in range(2,2*self.Ncells-2):
-                if i % 2 == 0:
-                    vectorR[i] = oilTrans[i]*(self.pressure[i+1]-self.pressure[i])-oilTrans[i-1]*(self.pressure[i]-self.pressure[i-1])+Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
-                else:
-                    vectorR[i] = waterTrans[i]*(self.pressure[i+1]-self.pressure[i])-waterTrans[i-1]*(self.pressure[i]-self.pressure[i-1])-Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
+            for i in range(1,self.Ncells-1):
+                vectorR[2*i] = oilTrans[i]*(self.pressure[i+1]-self.pressure[i])-oilTrans[i-1]*(self.pressure[i]-self.pressure[i-1])+Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
+                vectorR[2*i+1] = waterTrans[i]*(self.pressure[i+1]-self.pressure[i])-waterTrans[i-1]*(self.pressure[i]-self.pressure[i-1])-Porooverdt[i]*(self.saturation[i]-self.prevSat[i])
             vectorR[0] = oilTrans[0]*(self.pressure[1]-self.pressure[0])+Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
             vectorR[1] = waterTrans[0]*(self.pressure[1]-self.pressure[0])+self.leftDarcyVelocity/self.deltaX-Porooverdt[0]*(self.saturation[0]-self.prevSat[0])
             vectorR[-2] = 2*oilTransRight*(self.rightPressure-self.pressure[-1])-oilTrans[-2]*(self.pressure[-1]-self.pressure[-2])+Porooverdt[-1]*(self.saturation[-1]-self.prevSat[-1])
@@ -67,8 +65,8 @@ class Simulator1DIMPLICIT:
 
             # --- Build vectorX:
             vectorX =  np.zeros(2*self.Ncells,dtype=np.float64)
-            vectorX[::2] = self.pressure[::2]
-            vectorX[1::2] = self.saturation[1::2]
+            vectorX[::2] = self.pressure
+            vectorX[1::2] = self.saturation
             vectorX[-2] = self.rightPressure
 
             # --- Build matrixJ
@@ -122,8 +120,8 @@ class Simulator1DIMPLICIT:
 
             # Update vectorX and saturation
             self.vectorX = Xm
-            self.pressure[::2] = Xm[::2]
-            self.saturation[1::2] = Xm[1::2]
+            self.pressure = Xm[::2]
+            self.saturation = Xm[1::2]
             maxsat = 1.0-self.relpermOil.Sorw
             minsat = self.relpermOil.Swirr
             self.saturation[ self.saturation>maxsat ] = maxsat
