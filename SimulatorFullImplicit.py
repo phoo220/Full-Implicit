@@ -14,7 +14,7 @@ simulator_refined.deltat = daysToSeconds(30) """
 #print(simulator.saturation)
 #print(simulator.distance)
 #print(simulator.time)
-J = simulator.matrixJ
+#J = simulator.matrixJ
 #print('matrixJ----', simulator.matrixJ, 'end of matrixJ')
 
 times = [daysToSeconds(100), daysToSeconds(200), daysToSeconds(300), daysToSeconds(400),daysToSeconds(500)]

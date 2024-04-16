@@ -20,7 +20,7 @@ class Simulator1DIMPLICIT:
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
-        self.deltat = daysToSeconds(0.1)
+        self.deltat = daysToSeconds(1)
         self.time = 0.0
         self.oilViscosity = 2.0E-3
         self.waterViscosity = 1.0E-3
@@ -32,7 +32,7 @@ class Simulator1DIMPLICIT:
         self._Tran = (2.0/(1.0/self._perm[:-1]+1.0/self._perm[1:]))/self.deltaX**2
         self._TranRight = self._perm[-1]/self.deltaX**2
     
-    def doTimestep(self, tolerance=1e-9, max_iterations=10):
+    def doTimestep(self, tolerance=1e-6, max_iterations=10):
         '''
         Do one time step of length self.deltat until residual is small enough.
         '''
@@ -150,7 +150,6 @@ class Simulator1DIMPLICIT:
             self.time = self.time + self.deltat
             self.residual = vectorR
             self.prevSat=np.copy(self.saturation)
-            print("ok")
 
             # Check convergence
             residual_norm = np.linalg.norm(vectorR)
