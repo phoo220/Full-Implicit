@@ -39,7 +39,7 @@ class Simulator1DIMPLICIT:
         iteration = 0
         self.prevSat=np.copy(self.saturation)
         while True:
-            print('Iteration-',iteration)
+            #print('Iteration-',iteration)
             # Calculate mobility for oil and water phases based on current saturation
             mobOil = self.relpermOil(self.saturation)/self.oilViscosity
             mobWater = self.relpermWater(self.saturation)/self.waterViscosity
@@ -134,9 +134,9 @@ class Simulator1DIMPLICIT:
 
             # Check convergence
             residual_norm = np.linalg.norm(vectorR)
-            print('residual_norm-',residual_norm)
-            print('pressure - ',self.pressure)
-            print('saturation -',self.saturation)
+            #print('residual_norm-',residual_norm)
+            #print('pressure - ',self.pressure)
+            #print('saturation -',self.saturation)
             if residual_norm < tolerance or iteration >= max_iterations:
                 break
             iteration += 1
