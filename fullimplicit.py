@@ -20,7 +20,7 @@ class Simulator1DIMPLICIT:
         self.rightPressure = 1.0E7
         self.leftDarcyVelocity = 2.315E-6 * self.poro[0]
         self.mobilityWeighting = 1.0
-        self.deltat = daysToSeconds(0.1)
+        self.deltat = daysToSeconds(1)
         self.time = 0.0
         self.oilViscosity = 2.0E-3
         self.waterViscosity = 1.0E-3
@@ -170,4 +170,3 @@ class Simulator1DIMPLICIT:
                 self.time = time
             else:
                 self.doTimestep()
-                
