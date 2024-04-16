@@ -4,30 +4,30 @@ import numpy as np
 from corey import coreyWater, coreyOil
 import matplotlib.pyplot as plt
 
-simulator = Simulator1DIMPLICIT(10,200.0)
-simulator.simulateTo(daysToSeconds(1))
-
+simulator = Simulator1DIMPLICIT(5,100.0)
+simulator.simulateTo(daysToSeconds(10))
 """ simulator_refined = Simulator1DIMPLICIT(50,200.0)
 simulator_refined.deltat = daysToSeconds(30) """
 
-#print(simulator.pressure)
-#print(simulator.saturation)
+#print('pressure - ',simulator.pressure)
+#print('saturation -',simulator.saturation)
 #print(simulator.distance)
 #print(simulator.time)
-J = simulator.matrixJ
+#print('residual - ',simulator.residual)
+#J = simulator.matrixJ.round()
 #print('matrixJ----', simulator.matrixJ, 'end of matrixJ')
 
-times = [daysToSeconds(100), daysToSeconds(200), daysToSeconds(300), daysToSeconds(400),daysToSeconds(500)]
+times = [daysToSeconds(100), daysToSeconds(200), daysToSeconds(300)]
 pressures = []
 saturation = []
 for time in times:
     simulator.simulateTo(time)
-    pressures.append(simulator.pressure[::2])  # Make a copy to avoid modifying original pressure array
-    saturation.append(simulator.saturation[1::2])  # Make a copy to avoid modifying original saturation array
+    saturation.append(simulator.saturation)
+    pressures.append(simulator.pressure)  # Make a copy to avoid modifying original pressure array
 cell_lengths = np.linspace(0, simulator.length, simulator.Ncells)
 
 cmap = plt.get_cmap('plasma')
-for i, (time, sat) in enumerate(zip(times, saturation[::2])):
+for i, (time, sat) in enumerate(zip(times, saturation)):
     plt.plot(cell_lengths,sat, color= cmap(1-i/len(times)))
 plt.title('Saturation Profiles at Different Times')
 plt.xlabel('Distance [m]')
