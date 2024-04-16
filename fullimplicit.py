@@ -32,7 +32,7 @@ class Simulator1DIMPLICIT:
         self._Tran = (2.0/(1.0/self._perm[:-1]+1.0/self._perm[1:]))/self.deltaX**2
         self._TranRight = self._perm[-1]/self.deltaX**2
     
-    def doTimestep(self, tolerance=1e-6, max_iterations=10):
+    def doTimestep(self, tolerance=1e-8, max_iterations=10):
         '''
         Do one time step of length self.deltat until residual is small enough.
         '''
@@ -53,6 +53,9 @@ class Simulator1DIMPLICIT:
             waterTransRight = self._TranRight*mobWater[-1]
             Porooverdt = self.poro/self.deltat
             
+            oilTrans = np.append(oilTrans,oilTransRight)
+            waterTrans = np.append(waterTrans,waterTransRight)
+
             # --- Build vectorR:
             vectorR =  np.zeros(2*self.Ncells, dtype=np.float64)
             for i in range(1,self.Ncells-1):
@@ -110,7 +113,7 @@ class Simulator1DIMPLICIT:
             matrixJ[-2,-3] = -(self._Tran[-2]/self.oilViscosity)*self.relpermOil(self.saturation[-2])*(self.pressure[-1]-self.pressure[-2])
             matrixJ[-1,-4] = waterTrans[-2]
             matrixJ[-1,-3] = -(self._Tran[-2]/self.waterViscosity)*self.relpermWater(self.saturation[-2])*(self.pressure[-1]-self.pressure[-2])
-            
+
             # J_{-1,-1}
             matrixJ[-2,-2] = -2*oilTransRight-oilTrans[-2]
             matrixJ[-2,-1] = (2*self._TranRight/self.oilViscosity)*self.relpermOil(self.saturation[-1])*(self.rightPressure-self.pressure[-1])+Porooverdt[-1]
@@ -127,27 +130,29 @@ class Simulator1DIMPLICIT:
             self.vectorX = Xm
             self.pressure = Xm[::2]
             self.saturation = Xm[1::2]
-            maxsat = 1.0-self.relpermOil.Sorw
-            minsat = self.relpermOil.Swirr
-            self.saturation[ self.saturation>maxsat ] = maxsat
-            self.saturation[ self.saturation<minsat ] = minsat
-            self.time = self.time + self.deltat
             self.residual = vectorR
-            self.prevSat=np.copy(self.saturation)
 
             # Check convergence
             residual_norm = np.linalg.norm(vectorR)
-            if residual_norm < tolerance or iteration >= max_iterations:
-                break
-            iteration += 1
             print('residual_norm-',residual_norm)
             print('pressure - ',self.pressure)
             print('saturation -',self.saturation)
+            if residual_norm < tolerance or iteration >= max_iterations:
+                break
+            iteration += 1
             #print('residual -', self.residual)
         #self.residual = vectorR
         #self.pressure[::2] = Xm[::2]
         #self.saturation[1::2] = Xm[1::2]
         
+        maxsat = 1.0-self.relpermOil.Sorw
+        minsat = self.relpermOil.Swirr
+        self.saturation[ self.saturation>maxsat ] = maxsat
+        self.saturation[ self.saturation<minsat ] = minsat
+        self.time = self.time + self.deltat
+        #self.prevSat=np.copy(self.saturation)
+
+
 
     def simulateTo(self,time):
         '''
